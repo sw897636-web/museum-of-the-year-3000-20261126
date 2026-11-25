@@ -5,6 +5,7 @@
 // RULES: output must be a single line, 1-200 UTF-8 characters, no trailing newline.
 
 import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 
 type Candidate = { text: string };
 
@@ -63,6 +64,7 @@ const len = [...entry].length;
 if (len < 1 || len > 200) throw new Error("Entry length out of range: " + len);
 if (entry.includes("\n")) throw new Error("Entry must be a single line");
 
-mkdirSync("output", { recursive: true });
-writeFileSync("output/entry.txt", entry); // no trailing newline
+const OUTPUT_DIR = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+mkdirSync(OUTPUT_DIR, { recursive: true });
+writeFileSync(join(OUTPUT_DIR, 'entry.txt'), entry); // no trailing newline
 console.log(entry);
