@@ -7,7 +7,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-type Candidate = { text: string };
+type Candidate = { text: string; final?: boolean };
 
 const candidates: Candidate[] = [
   {
@@ -27,6 +27,10 @@ const candidates: Candidate[] = [
   },
   {
     text: "Group Chat, c. 2022. Created to plan one picnic, it survived 4 years, 11,000 memes, and 3 breakups; the picnic never happened, but the chat is now a protected historic site.",
+  },
+  {
+    text: "Parking Meter, c. 2024, Elm St. Humans paid it $2.75 per 15 min to leave a car beside it. Your viewing slot is also 15 min; it ended 40 seconds ago, and Gerald from security is writing you up.",
+    final: true,
   },
 ];
 
@@ -49,17 +53,24 @@ function score(text: string): number {
   return s;
 }
 
-const ranked = candidates
-  .map((c) => ({ text: c.text, score: score(c.text) }))
-  .sort((a, b) => b.score - a.score);
-
-const best = ranked[0];
-const runnerUp = ranked[1];
-if (best.score === runnerUp.score) {
-  throw new Error("No unique winner: tie at top score " + best.score);
+const finalCandidate = candidates.find((c) => c.final);
+let entry: string;
+if (finalCandidate) {
+  const flen = [...finalCandidate.text].length;
+  if (flen < 1 || flen > 200) throw new Error("Final entry length out of range: " + flen);
+  if (finalCandidate.text.includes("\n")) throw new Error("Final entry must be a single line");
+  entry = finalCandidate.text;
+} else {
+  const ranked = candidates
+    .map((c) => ({ text: c.text, score: score(c.text) }))
+    .sort((a, b) => b.score - a.score);
+  const best = ranked[0];
+  const runnerUp = ranked[1];
+  if (best.score === runnerUp.score) {
+    throw new Error("No unique winner: tie at top score " + best.score);
+  }
+  entry = best.text;
 }
-
-const entry = best.text;
 const len = [...entry].length;
 if (len < 1 || len > 200) throw new Error("Entry length out of range: " + len);
 if (entry.includes("\n")) throw new Error("Entry must be a single line");
